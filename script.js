@@ -74,3 +74,47 @@ async function getData(){
       
         return model;
       }
+      //prepare the data for training
+      function convertToTensor(data) {
+        // Wrapping these calculations in a tidy will dispose any 
+        // intermediate tensors.
+        
+        //tf.tidy saves memory by removing the intermediate tensors except the tensor it returns
+        return tf.tidy(() => {
+          // Step 1. Shuffle the data 
+          //shuffling helps each have a variety of data across the data distribution.  
+          tf.util.shuffle(data);
+      
+          // Step 2. Convert data to Tensor
+          const inputs = data.map(d => d.horsepower)
+          const labels = data.map(d => d.mpg);
+          
+          //the tensors will have a shape of [num_examples,num_features_per_examples]
+          //Here we have inputs.length example and each example has 1 input feature(horsepower)
+          const inputTensor = tf.tensor2d(inputs, [inputs.length, 1]);
+          const labelTensor = tf.tensor2d(labels, [labels.length, 1]);
+      
+          //Step 3. Normalize the data to the range 0 - 1 using min-max scaling
+          /*for every feauture the min value gets transformed to 0 and the max value gets transformed
+          *to 1,and every other value gets transformed into a decimal between 0 and 1*/
+          const inputMax = inputTensor.max();
+          const inputMin = inputTensor.min();  
+          const labelMax = labelTensor.max();
+          const labelMin = labelTensor.min();
+          /*the internals of many machine learning models will buid with tf.js are 
+          *designed to work with numbers that are not too big.so normalize the data between 0-1*/
+          const normalizedInputs = inputTensor.sub(inputMin).div(inputMax.sub(inputMin));
+          const normalizedLabels = labelTensor.sub(labelMin).div(labelMax.sub(labelMin));
+          /*we want to keep the values used for normalization during training 
+          *so we can un normalize the outputs to get them back into original scale*/
+          return {
+            inputs: normalizedInputs,
+            labels: normalizedLabels,
+            // Return the min/max bounds so we can use them later.
+            inputMax,
+            inputMin,
+            labelMax,
+            labelMin,
+          }
+        });  
+      }
