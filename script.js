@@ -42,8 +42,35 @@ async function getData(){
             height: 300
           }
         );
+
+        // Create the model
+        //this will show a summary of the layers on webpage.
+         const model = createModel();  
+         tfvis.show.modelSummary({name: 'Model Summary'}, model);
        }
+
      /*DOM is a doc object model which treats html/xml doc as a tree structure
      *DOM content loaded event is fired when the document is completly loaded and parsed,without
      *waiting for stylesheets,images and subframes to finish loading.*/
       document.addEventListener('DOMContentLoaded', run);
+
+      //define the model architecture
+
+      function createModel() {
+        // Create a sequential model
+        //In sequential model the input will flow stright to the o/p,other kinds of model can have branches
+        const model = tf.sequential(); 
+        
+        // Add a single hidden layer
+        /* we need to define the input shape because this is the first layer,here input shape is 1
+        *because we have 1 number as i/p(horsepower).
+        *units sets how big the weight matrix will be in the layer. 
+        *By setting it to 1 here we are saying there will be 1 weight 
+        *for each of the input features of the data.*/
+        model.add(tf.layers.dense({inputShape: [1], units: 1, useBias: true}));
+        
+        // Add an output layer
+        model.add(tf.layers.dense({units: 1, useBias: true}));
+      
+        return model;
+      }
